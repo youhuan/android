@@ -9,9 +9,6 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.android.tedcoder.wkvideoplayer.model.Video;
-import com.android.tedcoder.wkvideoplayer.model.VideoUrl;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,29 +43,29 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         mMediaControl.onProgressTurn(ProgressState.STOP, 0);
     }
 
-    private EasySwitcher.EasySwitcherCallbackImpl mSrcSwitcherCallback = new EasySwitcher.EasySwitcherCallbackImpl() {
-        @Override
-        public void onSelectItem(int position, String name) {
-            mMediaControl.onSelectSrc(position);
-        }
-
-        @Override
-        public void onShowList() {
-            mMediaControl.alwaysShowController();
-        }
-    };
-
-    private EasySwitcher.EasySwitcherCallbackImpl mFormatSwitcherCallback = new EasySwitcher.EasySwitcherCallbackImpl() {
-        @Override
-        public void onSelectItem(int position, String name) {
-            mMediaControl.onSelectFormat(position);
-        }
-
-        @Override
-        public void onShowList() {
-            mMediaControl.alwaysShowController();
-        }
-    };
+//    private EasySwitcher.EasySwitcherCallbackImpl mSrcSwitcherCallback = new EasySwitcher.EasySwitcherCallbackImpl() {
+//        @Override
+//        public void onSelectItem(int position, String name) {
+//            mMediaControl.onSelectSrc(position);
+//        }
+//
+//        @Override
+//        public void onShowList() {
+//            mMediaControl.alwaysShowController();
+//        }
+//    };
+//
+//    private EasySwitcher.EasySwitcherCallbackImpl mFormatSwitcherCallback = new EasySwitcher.EasySwitcherCallbackImpl() {
+//        @Override
+//        public void onSelectItem(int position, String name) {
+//            mMediaControl.onSelectFormat(position);
+//        }
+//
+//        @Override
+//        public void onShowList() {
+//            mMediaControl.alwaysShowController();
+//        }
+//    };
 
     @Override
     public void onClick(View view) {

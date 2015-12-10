@@ -41,11 +41,7 @@ import java.util.TimerTask;
  * Created by youhuan on 15/12/10.
  */
 public class VideoPlayer extends FrameLayout
-        implements
-        View.OnClickListener,
-        SurfaceHolder.Callback,
-        ExoPlayer.Listener,
-        MediaCodecVideoTrackRenderer.EventListener {
+        implements View.OnClickListener, SurfaceHolder.Callback, ExoPlayer.Listener, MediaCodecVideoTrackRenderer.EventListener {
     private final static String TAG = "VideoPlayer";
     private final int MSG_HIDE_CONTROLLER = 10;
     private final int MSG_UPDATE_PLAY_TIME = 11;
@@ -61,14 +57,13 @@ public class VideoPlayer extends FrameLayout
     private Timer mUpdateTimer;
     private VideoPlayCallbackImpl mVideoPlayCallback;
 
-    private View mProgressBarView;
-
+    // 所有播放视频列表
     private ArrayList<Video> mAllVideo;
+    // 当前播放的视频
     private Video mNowPlayVideo;
 
     //是否自动隐藏控制栏
     private boolean mAutoHideController = true;
-
 
     private MediaCodecVideoTrackRenderer mVideoRenderer;
     private MediaCodecAudioTrackRenderer mAudioRenderer;
@@ -79,7 +74,7 @@ public class VideoPlayer extends FrameLayout
 
     // http://v.yilos.com/973f5643fe7fe566d00c8b447bc75e65.mp4
     // http://v.yilos.com/826fd77a9baefd7907d4e04f4d20ab36.mp4
-    private String mUrl = "http://v.yilos.com/826fd77a9baefd7907d4e04f4d20ab36.mp4";
+//    private String mUrl = "http://v.yilos.com/826fd77a9baefd7907d4e04f4d20ab36.mp4";
 
     private static final CookieManager defaultCookieManager;
 
@@ -108,6 +103,28 @@ public class VideoPlayer extends FrameLayout
     public VideoPlayer(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initView(context);
+    }
+
+
+    private void initView(Context context) {
+        mContext = context;
+        View.inflate(context, R.layout.video_player_layout, this);
+        mSurfaceView = (SurfaceView) findViewById(R.id.video_view);
+        mMediaController = (MediaController) findViewById(R.id.controller);
+        mLayoutProgressbar = (FrameLayout) findViewById(R.id.progressbar);
+
+        mMediaController.setMediaControl(mMediaControl);
+        mSurfaceView.setOnTouchListener(mOnTouchVideoListener);
+
+        showProgressView(false);
+
+        mLayoutProgressbar.setOnClickListener(mOnClickListener);
+        mAllVideo = new ArrayList<>();
+
+        CookieHandler currentHandler = CookieHandler.getDefault();
+        if (currentHandler != defaultCookieManager) {
+            CookieHandler.setDefault(defaultCookieManager);
+        }
     }
 
 
@@ -187,8 +204,8 @@ public class VideoPlayer extends FrameLayout
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (mProgressBarView.getVisibility() == View.VISIBLE) {
-                        mProgressBarView.setVisibility(View.GONE);
+                    if (mLayoutProgressbar.getVisibility() == View.VISIBLE) {
+                        mLayoutProgressbar.setVisibility(View.GONE);
                     }
                 }
             }, 2000);
@@ -196,7 +213,7 @@ public class VideoPlayer extends FrameLayout
                 @Override
                 public boolean onInfo(MediaPlayer mp, int what, int extra) {
                     if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START || what == 861) {
-                        mProgressBarView.setVisibility(View.GONE);
+                        mLayoutProgressbar.setVisibility(View.GONE);
                         return true;
                     }
                     return false;
@@ -356,38 +373,14 @@ public class VideoPlayer extends FrameLayout
     }
 
 
-    private void initView(Context context) {
-        mContext = context;
-        View.inflate(context, R.layout.video_player_layout, this);
-        mSurfaceView = (SurfaceView) findViewById(R.id.video_view);
-        mMediaController = (MediaController) findViewById(R.id.controller);
-        mProgressBarView = findViewById(R.id.progressbar);
-
-        mMediaController.setMediaControl(mMediaControl);
-        mSurfaceView.setOnTouchListener(mOnTouchVideoListener);
-
-        showProgressView(false);
-
-        mProgressBarView.setOnClickListener(mOnClickListener);
-        mAllVideo = new ArrayList<>();
-
-        CookieHandler currentHandler = CookieHandler.getDefault();
-        if (currentHandler != defaultCookieManager) {
-            CookieHandler.setDefault(defaultCookieManager);
-        }
-
-
-    }
-
-
     /**
      * 创建ExoPlayer
      */
     private void preparePlayer() {
-        if (mUrl == null || mUrl.isEmpty()) {
-            Log.e(TAG, "视频url地址为空");
-            return;
-        }
+//        if (mUrl == null || mUrl.isEmpty()) {
+//            Log.e(TAG, "视频url地址为空");
+//            return;
+//        }
 
         if (mExoPlayer == null) {
             mExoPlayer = ExoPlayer.Factory.newInstance(2, 1000, 5000);
@@ -397,14 +390,13 @@ public class VideoPlayer extends FrameLayout
 //            mMediaController.setMediaPlayer(mPlayerControl);
             mMediaController.setEnabled(true);
         }
-        buildRenders();
     }
 
     /**
      * 创建videoRender和audioRender
      */
-    private void buildRenders() {
-        FrameworkSampleSource sampleSource = new FrameworkSampleSource(mContext, Uri.parse(mUrl), null);
+    private void buildRenders(String url) {
+        FrameworkSampleSource sampleSource = new FrameworkSampleSource(mContext, Uri.parse(url), null);
         mVideoRenderer = new MediaCodecVideoTrackRenderer(mContext, sampleSource,
                 MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT);
         mAudioRenderer = new MediaCodecAudioTrackRenderer(sampleSource);
@@ -483,13 +475,8 @@ public class VideoPlayer extends FrameLayout
             Log.e("TAG", "videoUrl should not be null");
             return;
         }
-        mSurfaceView.setOnPreparedListener(mOnPreparedListener);
-        if (videoUrl.isOnlineVideo()) {
-            mSurfaceView.setVideoPath(videoUrl.getFormatUrl());
-        } else {
-            Uri uri = Uri.parse(videoUrl.getFormatUrl());
-            mSurfaceView.setVideoURI(uri);
-        }
+//        mSurfaceView.setOnPreparedListener(mOnPreparedListener);
+        buildRenders(videoUrl.getFormatUrl());
         mSurfaceView.setVisibility(VISIBLE);
         startPlayVideo(seekTime);
     }
@@ -501,7 +488,7 @@ public class VideoPlayer extends FrameLayout
     private void startPlayVideo(int seekTime) {
         if (null == mUpdateTimer) resetUpdateTimer();
         resetHideTimer();
-        mSurfaceView.setOnCompletionListener(mOnCompletionListener);
+//        mSurfaceView.setOnCompletionListener(mOnCompletionListener);
         mPlayerControl.start();
         if (seekTime > 0) {
             mPlayerControl.seekTo(seekTime);
@@ -535,17 +522,17 @@ public class VideoPlayer extends FrameLayout
      * @param isTransparentBg isTransparentBg
      */
     private void showProgressView(Boolean isTransparentBg) {
-        mProgressBarView.setVisibility(VISIBLE);
+        mLayoutProgressbar.setVisibility(VISIBLE);
         if (!isTransparentBg) {
-            mProgressBarView.setBackgroundResource(android.R.color.black);
+            mLayoutProgressbar.setBackgroundResource(android.R.color.black);
         } else {
-            mProgressBarView.setBackgroundResource(android.R.color.transparent);
+            mLayoutProgressbar.setBackgroundResource(android.R.color.transparent);
         }
     }
 
 
     public void showOrHideProgressView(boolean showFlag) {
-        mProgressBarView.setVisibility(showFlag ? VISIBLE : GONE);
+        mLayoutProgressbar.setVisibility(showFlag ? VISIBLE : GONE);
     }
 
     public void hideController() {
@@ -638,15 +625,14 @@ public class VideoPlayer extends FrameLayout
                 break;
             case ExoPlayer.STATE_READY:
                 if (!mIsPlayWhenReady) {
-                    progressbar.setVisibility(View.INVISIBLE);
-                    mMediaController.show();
+                    mLayoutProgressbar.setVisibility(View.INVISIBLE);
                 }
                 if (mIsPlayWhenReady && mHasRenderToSurface) {
-                    progressbar.setVisibility(View.INVISIBLE);
+                    mLayoutProgressbar.setVisibility(View.INVISIBLE);
                 }
                 break;
             default:
-                mLoadingIcon.setVisibility(View.VISIBLE);
+                mLayoutProgressbar.setVisibility(View.VISIBLE);
                 break;
         }
     }
