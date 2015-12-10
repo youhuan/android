@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="biz_audio_progress_bg">#00b2ff</color>
+    <color name="biz_audio_progress_first">#ffffff</color>
+    <color name="biz_audio_progress_second">#6b6666</color>
+
+    <color name="default_bg">#aa000000</color>
+    <color name="select_color">#00b2ff</color>
+    <color name="normal_color">#ffffffff</color>
+    <!--special color-->
+    <color name="black_a10_color">#1a000000</color>
+
+    <color name="second_bg">#f1f1f1</color>
+    <!-- titlebar和底bar的背景色, 字体高亮颜色 -->
+    <color name="high_light_color">#1f7eea</color>
+    <color name="video_info_summary_color">#666666</color>
+    <color name="video_info_header_color">#858585</color>
+    <color name="divider_color">#d6d4d4</color>
+</resources>
