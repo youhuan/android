@@ -1,11 +1,8 @@
 package com.youhuan.exovideoplayer;
 
-import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.MediaCodec;
-import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
@@ -19,21 +16,24 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import com.google.android.exoplayer.ExoPlaybackException;
 import com.google.android.exoplayer.ExoPlayer;
-import com.google.android.exoplayer.FrameworkSampleSource;
 import com.google.android.exoplayer.MediaCodecAudioTrackRenderer;
 import com.google.android.exoplayer.MediaCodecTrackRenderer;
 import com.google.android.exoplayer.MediaCodecVideoTrackRenderer;
+import com.google.android.exoplayer.audio.AudioCapabilities;
+import com.google.android.exoplayer.audio.AudioTrack;
+import com.google.android.exoplayer.extractor.ExtractorSampleSource;
+import com.google.android.exoplayer.upstream.Allocator;
+import com.google.android.exoplayer.upstream.DataSource;
+import com.google.android.exoplayer.upstream.DefaultAllocator;
+import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer.upstream.DefaultUriDataSource;
 import com.google.android.exoplayer.util.PlayerControl;
+import com.google.android.exoplayer.util.Util;
 
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -41,7 +41,7 @@ import java.util.TimerTask;
  * Created by youhuan on 15/12/10.
  */
 public class VideoPlayer extends FrameLayout
-        implements View.OnClickListener, SurfaceHolder.Callback, ExoPlayer.Listener, MediaCodecVideoTrackRenderer.EventListener {
+        implements View.OnClickListener, SurfaceHolder.Callback, ExoPlayer.Listener, MediaCodecVideoTrackRenderer.EventListener, MediaCodecAudioTrackRenderer.EventListener {
     private final static String TAG = "VideoPlayer";
     private final int MSG_HIDE_CONTROLLER = 10;
     private final int MSG_UPDATE_PLAY_TIME = 11;
@@ -72,16 +72,15 @@ public class VideoPlayer extends FrameLayout
     private Boolean mHasRenderToSurface = false;//是否已经渲染到surface
     private PlayerControl mPlayerControl;
 
-    // http://v.yilos.com/973f5643fe7fe566d00c8b447bc75e65.mp4
-    // http://v.yilos.com/826fd77a9baefd7907d4e04f4d20ab36.mp4
-//    private String mUrl = "http://v.yilos.com/826fd77a9baefd7907d4e04f4d20ab36.mp4";
+    private Handler mainHandler;
 
-    private static final CookieManager defaultCookieManager;
 
-    static {
-        defaultCookieManager = new CookieManager();
-        defaultCookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
-    }
+//    private static final CookieManager defaultCookieManager;
+//
+//    static {
+//        defaultCookieManager = new CookieManager();
+//        defaultCookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
+//    }
 
 
     public VideoPlayer(Context context) {
@@ -99,11 +98,11 @@ public class VideoPlayer extends FrameLayout
         initView(context);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public VideoPlayer(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        initView(context);
-    }
+//    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+//    public VideoPlayer(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+//        super(context, attrs, defStyleAttr, defStyleRes);
+//        initView(context);
+//    }
 
 
     private void initView(Context context) {
@@ -121,10 +120,13 @@ public class VideoPlayer extends FrameLayout
         mLayoutProgressbar.setOnClickListener(mOnClickListener);
         mAllVideo = new ArrayList<>();
 
-        CookieHandler currentHandler = CookieHandler.getDefault();
-        if (currentHandler != defaultCookieManager) {
-            CookieHandler.setDefault(defaultCookieManager);
-        }
+        mainHandler = new Handler();
+
+//        CookieHandler currentHandler = CookieHandler.getDefault();
+//        if (currentHandler != defaultCookieManager) {
+//            CookieHandler.setDefault(defaultCookieManager);
+//        }
+        preparePlayer();
     }
 
 
@@ -160,10 +162,10 @@ public class VideoPlayer extends FrameLayout
     };
 
     private MediaController.MediaControlImpl mMediaControl = new MediaController.MediaControlImpl() {
-        @Override
-        public void alwaysShowController() {
-            VideoPlayer.this.alwaysShowController();
-        }
+//        @Override
+//        public void alwaysShowController() {
+//            VideoPlayer.this.alwaysShowController();
+//        }
 
         @Override
         public void onPlayTurn() {
@@ -196,45 +198,6 @@ public class VideoPlayer extends FrameLayout
         }
     };
 
-    private MediaPlayer.OnPreparedListener mOnPreparedListener = new MediaPlayer.OnPreparedListener() {
-        @Override
-        public void onPrepared(MediaPlayer mediaPlayer) {
-            // 两秒钟之后如果loading还显示的话，则将其隐藏
-            // 解决神奇的三星 note2不回调onInfoListener
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (mLayoutProgressbar.getVisibility() == View.VISIBLE) {
-                        mLayoutProgressbar.setVisibility(View.GONE);
-                    }
-                }
-            }, 2000);
-            mediaPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
-                @Override
-                public boolean onInfo(MediaPlayer mp, int what, int extra) {
-                    if (what == MediaPlayer.MEDIA_INFO_VIDEO_RENDERING_START || what == 861) {
-                        mLayoutProgressbar.setVisibility(View.GONE);
-                        return true;
-                    }
-                    return false;
-                }
-            });
-        }
-    };
-
-    private MediaPlayer.OnCompletionListener mOnCompletionListener = new MediaPlayer.OnCompletionListener() {
-        @Override
-        public void onCompletion(MediaPlayer mediaPlayer) {
-            stopUpdateTimer();
-            stopHideTimer(true);
-            mMediaController.playFinish(mPlayerControl.getDuration());
-            if (null == mVideoPlayCallback) {
-                return;
-            }
-            mVideoPlayCallback.onPlayFinish();
-//            Toast.makeText(mContext, "视频播放完成", Toast.LENGTH_SHORT).show();
-        }
-    };
 
     public void setVideoPlayCallback(VideoPlayCallbackImpl videoPlayCallback) {
         mVideoPlayCallback = videoPlayCallback;
@@ -267,11 +230,11 @@ public class VideoPlayer extends FrameLayout
      * @param fileUrl fileUrl
      */
     @SuppressWarnings("unused")
-    public void loadLocalVideo(String fileUrl) {
+    public void loadLocalVideo(String fileUrl, String fileName) {
         VideoUrl videoUrl = new VideoUrl();
         videoUrl.setIsOnlineVideo(false);
         videoUrl.setFormatUrl(fileUrl);
-        videoUrl.setFormatName("本地视频");
+        videoUrl.setFormatName(fileName);
         Video video = new Video();
         ArrayList<VideoUrl> videoUrls = new ArrayList<>();
         videoUrls.add(videoUrl);
@@ -377,33 +340,51 @@ public class VideoPlayer extends FrameLayout
      * 创建ExoPlayer
      */
     private void preparePlayer() {
-//        if (mUrl == null || mUrl.isEmpty()) {
-//            Log.e(TAG, "视频url地址为空");
-//            return;
-//        }
-
         if (mExoPlayer == null) {
             mExoPlayer = ExoPlayer.Factory.newInstance(2, 1000, 5000);
             mExoPlayer.addListener(this);
-            mExoPlayer.seekTo(mPosition);
+//            mExoPlayer.seekTo(mPosition);
             mPlayerControl = new PlayerControl(mExoPlayer);
 //            mMediaController.setMediaPlayer(mPlayerControl);
             mMediaController.setEnabled(true);
         }
     }
 
+    private static final int BUFFER_SEGMENT_SIZE = 256 * 1024;
+    private static final int BUFFER_SEGMENT_COUNT = 256;
+
     /**
      * 创建videoRender和audioRender
      */
     private void buildRenders(String url) {
-        FrameworkSampleSource sampleSource = new FrameworkSampleSource(mContext, Uri.parse(url), null);
-        mVideoRenderer = new MediaCodecVideoTrackRenderer(mContext, sampleSource,
-                MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT);
-        mAudioRenderer = new MediaCodecAudioTrackRenderer(sampleSource);
+//        ExtractorSampleSource extractorSampleSource = new ExtractorSampleSource()
+//        FrameworkSampleSource sampleSource = new FrameworkSampleSource(mContext, Uri.parse(url), null);
+//        mVideoRenderer = new MediaCodecVideoTrackRenderer(mContext, sampleSource,
+//                MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT);
+//        mAudioRenderer = new MediaCodecAudioTrackRenderer(sampleSource);
+//
+//        mExoPlayer.prepare(mVideoRenderer, mAudioRenderer);
+        // 调用了该方法后，视频播放时没有声音
+//        mExoPlayer.sendMessage(mAudioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME, 0f);
+
+
+        String userAgent = Util.getUserAgent(mContext, mContext.getApplicationInfo().name);
+
+        Allocator allocator = new DefaultAllocator(BUFFER_SEGMENT_SIZE);
+
+        DefaultBandwidthMeter bandwidthMeter = new DefaultBandwidthMeter(mainHandler,
+                null);
+        DataSource dataSource = new DefaultUriDataSource(mContext, bandwidthMeter, userAgent);
+        ExtractorSampleSource sampleSource = new ExtractorSampleSource(Uri.parse(url), dataSource, allocator,
+                BUFFER_SEGMENT_COUNT * BUFFER_SEGMENT_SIZE);
+        mVideoRenderer = new MediaCodecVideoTrackRenderer(mContext,
+                sampleSource, MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT, 5000, mainHandler,
+                this, 50);
+        mAudioRenderer = new MediaCodecAudioTrackRenderer(sampleSource,
+                null, true, mainHandler, this, AudioCapabilities.getCapabilities(mContext));
+
 
         mExoPlayer.prepare(mVideoRenderer, mAudioRenderer);
-        // 调用了该方法后，视频播放是没有声音
-//        mExoPlayer.sendMessage(mAudioRenderer, MediaCodecAudioTrackRenderer.MSG_SET_VOLUME, 0f);
     }
 
 
@@ -434,7 +415,7 @@ public class VideoPlayer extends FrameLayout
     /**
      * 释放player
      */
-    private void releasePlayer() {
+    public void releasePlayer() {
         mHasRenderToSurface = false;
         if (mExoPlayer != null) {
             mPosition = mExoPlayer.getCurrentPosition();
@@ -442,7 +423,7 @@ public class VideoPlayer extends FrameLayout
             mExoPlayer = null;
             mPlayerControl = null;
         }
-        mVideoRenderer = null;
+//        mVideoRenderer = null;
     }
 
 
@@ -478,6 +459,7 @@ public class VideoPlayer extends FrameLayout
 //        mSurfaceView.setOnPreparedListener(mOnPreparedListener);
         buildRenders(videoUrl.getFormatUrl());
         mSurfaceView.setVisibility(VISIBLE);
+        mLayoutProgressbar.setVisibility(View.GONE);
         startPlayVideo(seekTime);
     }
 
@@ -486,7 +468,9 @@ public class VideoPlayer extends FrameLayout
      * should called after setVideoPath()
      */
     private void startPlayVideo(int seekTime) {
-        if (null == mUpdateTimer) resetUpdateTimer();
+        if (null == mUpdateTimer) {
+            resetUpdateTimer();
+        }
         resetHideTimer();
 //        mSurfaceView.setOnCompletionListener(mOnCompletionListener);
         mPlayerControl.start();
@@ -511,6 +495,9 @@ public class VideoPlayer extends FrameLayout
     private void updatePlayProgress() {
         int allTime = mPlayerControl.getDuration();
         int playTime = mPlayerControl.getCurrentPosition();
+        if (allTime < 1 || playTime < 1) {
+            return;
+        }
         int loadProgress = mPlayerControl.getBufferPercentage();
         int progress = playTime * 100 / allTime;
         mMediaController.setProgressBar(progress, loadProgress);
@@ -529,7 +516,6 @@ public class VideoPlayer extends FrameLayout
             mLayoutProgressbar.setBackgroundResource(android.R.color.transparent);
         }
     }
-
 
     public void showOrHideProgressView(boolean showFlag) {
         mLayoutProgressbar.setVisibility(showFlag ? VISIBLE : GONE);
@@ -573,10 +559,10 @@ public class VideoPlayer extends FrameLayout
         }
     }
 
-    private void alwaysShowController() {
-        mHandler.removeMessages(MSG_HIDE_CONTROLLER);
-        mMediaController.setVisibility(View.VISIBLE);
-    }
+//    private void alwaysShowController() {
+//        mHandler.removeMessages(MSG_HIDE_CONTROLLER);
+//        mMediaController.setVisibility(View.VISIBLE);
+//    }
 
     private void resetHideTimer() {
         if (!isAutoHideController()) return;
@@ -620,15 +606,12 @@ public class VideoPlayer extends FrameLayout
         mIsPlayWhenReady = playWhenReady;
         switch (playbackState) {
             case ExoPlayer.STATE_ENDED:
-                mExoPlayer.seekTo(0);
+                mPlayerControl.seekTo(0);
                 showReplay();
                 break;
             case ExoPlayer.STATE_READY:
-                if (!mIsPlayWhenReady) {
-                    mLayoutProgressbar.setVisibility(View.INVISIBLE);
-                }
-                if (mIsPlayWhenReady && mHasRenderToSurface) {
-                    mLayoutProgressbar.setVisibility(View.INVISIBLE);
+                if (mIsPlayWhenReady) {
+                    mLayoutProgressbar.setVisibility(View.GONE);
                 }
                 break;
             default:
@@ -647,6 +630,8 @@ public class VideoPlayer extends FrameLayout
         Log.d(TAG, "onPlayerError" + e.getMessage());
         showReplay();
     }
+
+    // MediaCodecVideoTrackRenderer.EventListener
 
     @Override
     public void onDroppedFrames(int count, long elapsed) {
@@ -681,7 +666,6 @@ public class VideoPlayer extends FrameLayout
     @Override
     public void onDecoderInitialized(String decoderName, long elapsedRealtimeMs, long initializationDurationMs) {
         Log.d(TAG, "onDecoderInitialized");
-
     }
 
     // SurfaceHolder.Callback implementation
@@ -709,6 +693,17 @@ public class VideoPlayer extends FrameLayout
         if (v == mSurfaceView) {
             showOrHideController();
         }
+    }
+
+    //MediaCodecAudioTrackRenderer.EventListener
+    @Override
+    public void onAudioTrackInitializationError(AudioTrack.InitializationException e) {
+
+    }
+
+    @Override
+    public void onAudioTrackWriteError(AudioTrack.WriteException e) {
+
     }
 
 

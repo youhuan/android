@@ -92,6 +92,8 @@ public class MainActivity extends Activity
         if (currentHandler != defaultCookieManager) {
             CookieHandler.setDefault(defaultCookieManager);
         }
+
+        preparePlayer();
     }
 
     @Override
@@ -99,7 +101,7 @@ public class MainActivity extends Activity
         super.onResume();
         Log.d(TAG, "onResume");
         mPlayImage.setVisibility(View.VISIBLE);
-        preparePlayer();
+
     }
 
     @Override
