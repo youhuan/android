@@ -15,8 +15,8 @@ import java.util.ArrayList;
  * Created by youhuan on 15/12/11.
  */
 public class VideoActivity extends Activity {
-    private String mTitle = "第496期：沂水弦歌";
-    private String mUrl = "http://v.yilos.com/826fd77a9baefd7907d4e04f4d20ab36.mp4";
+    private String mTitle = "第2期：艾蕾嫚特殊眼型及款式搭配";
+    private String mUrl = "http://v.yilos.com/2440562ea8bc0930a54045be0a67a6e7.mp4";
 
     private ViewGroup mDecorView;
     private FrameLayout mVideoPlayerLayout;
@@ -28,7 +28,7 @@ public class VideoActivity extends Activity {
         setContentView(R.layout.activity_video);
         mDecorView = (ViewGroup) getWindow().getDecorView().findViewById(android.R.id.content);
         mVideoPlayer = (VideoPlayer) findViewById(R.id.video_player);
-        mVideoPlayerLayout = (FrameLayout) mVideoPlayer.getParent();
+        mVideoPlayerLayout = (FrameLayout) findViewById(R.id.layout_video_player);
         mVideoPlayer.setPageType(MediaController.PageType.SHRINK);
         mVideoPlayer.setSupportPlayOnSurfaceView();
         mVideoPlayer.setVideoPlayCallback(new VideoPlayer.VideoPlayCallbackImpl() {
@@ -62,14 +62,8 @@ public class VideoActivity extends Activity {
 
         ArrayList<Video> videos = new ArrayList<Video>();
         Video video = new Video();
-        VideoUrl videoUrl = new VideoUrl();
         video.setVideoName(mTitle);
-        videoUrl.setFormatUrl(mUrl);
-        video.setPlayUrl(videoUrl);
-
-        ArrayList<VideoUrl> videoUrls = new ArrayList<>();
-        videoUrls.add(videoUrl);
-        video.setVideoUrl(videoUrls);
+        video.setVideoUri(mUrl);
         videos.add(video);
 
         mVideoPlayer.loadMultipleVideo(videos);
@@ -78,8 +72,10 @@ public class VideoActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mVideoPlayer.close();
-        mVideoPlayer.releasePlayer();
+        if (null != mVideoPlayer) {
+            mVideoPlayer.close();
+            mVideoPlayer.releasePlayer();
+        }
     }
 
     @Override

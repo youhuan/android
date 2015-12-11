@@ -17,52 +17,26 @@
 
 package com.youhuan.exovideoplayer;
 
-import java.util.ArrayList;
-
 /**
- * Created by Ted on 2015/9/2.
  * 视频对象
  */
 public class Video {
-    private String mVideoName;//视频名称 如房源视频、小区视频
-    private ArrayList<VideoUrl> mVideoUrl;//视频的地址列表
-
-    /***************请看注释***************************/
-    private VideoUrl mPlayUrl;//当前正在播放的地址。 外界不用传
+    private String videoName;//视频名称
+    private String videoUri;//视频地址
 
     public String getVideoName() {
-        return mVideoName;
+        return videoName;
     }
 
     public void setVideoName(String videoName) {
-        mVideoName = videoName;
+        this.videoName = videoName;
     }
 
-    public ArrayList<VideoUrl> getVideoUrl() {
-        return mVideoUrl;
+    public String getVideoUri() {
+        return videoUri;
     }
 
-    public void setVideoUrl(ArrayList<VideoUrl> videoUrl) {
-        mVideoUrl = videoUrl;
-    }
-
-    public VideoUrl getPlayUrl() {
-        return mPlayUrl;
-    }
-
-    public void setPlayUrl(VideoUrl playUrl) {
-        mPlayUrl = playUrl;
-    }
-
-    public void setPlayUrl(int position){
-        if(position < 0 || position >= mVideoUrl.size())return;
-        setPlayUrl(mVideoUrl.get(position));
-    }
-
-    public boolean equal(Video video){
-        if(null != video){
-            return mVideoName.equals(video.getVideoName());
-        }
-        return false;
+    public void setVideoUri(String videoUri) {
+        this.videoUri = videoUri;
     }
 }

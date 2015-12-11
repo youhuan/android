@@ -11,11 +11,9 @@ import android.widget.TextView;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 
 /**
- * Created by Ted on 2015/8/4.
  * MediaController
  */
 public class MediaController extends FrameLayout implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
@@ -29,8 +27,9 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean isFromUser) {
-        if (isFromUser)
+        if (isFromUser) {
             mMediaControl.onProgressTurn(ProgressState.DOING, progress);
+        }
     }
 
     @Override
@@ -54,20 +53,6 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         }
     }
 
-    public void initVideoList(ArrayList<Video> videoList) {
-        ArrayList<String> name = new ArrayList<>();
-        for (Video video : videoList) {
-            name.add(video.getVideoName());
-        }
-    }
-
-    public void initPlayVideo(Video video) {
-        ArrayList<String> format = new ArrayList<>();
-        for (VideoUrl url : video.getVideoUrl()) {
-            format.add(url.getFormatName());
-        }
-    }
-
     /**
      * 初始化精简模式
      */
@@ -79,17 +64,25 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
     /***
      * 强制横屏模式
      */
-    public void forceLandscapeMode(){
+    public void forceLandscapeMode() {
         mExpandImg.setVisibility(INVISIBLE);
         mShrinkImg.setVisibility(INVISIBLE);
     }
 
 
     public void setProgressBar(int progress, int secondProgress) {
-        if (progress < 0) progress = 0;
-        if (progress > 100) progress = 100;
-        if (secondProgress < 0) secondProgress = 0;
-        if (secondProgress > 100) secondProgress = 100;
+        if (progress < 0) {
+            progress = 0;
+        }
+        if (progress > 100) {
+            progress = 100;
+        }
+        if (secondProgress < 0) {
+            secondProgress = 0;
+        }
+        if (secondProgress > 100) {
+            secondProgress = 100;
+        }
         mProgressSeekBar.setProgress(progress);
         mProgressSeekBar.setSecondaryProgress(secondProgress);
     }
@@ -194,8 +187,5 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         void onPageTurn();
 
         void onProgressTurn(ProgressState state, int progress);
-
-//        void alwaysShowController();
     }
-
 }
