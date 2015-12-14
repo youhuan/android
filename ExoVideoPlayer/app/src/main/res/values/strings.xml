@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">ExoVideoPlayer</string>
+
+    <string name="video_play_not_wifi_tips2">继续播放可能产生流量费用</string>
+    <string name="video_play_not_wifi_tips1">您正在使用非Wi-Fi网络</string>
+    <string name="continue_to_play">继续播放</string>
 </resources>

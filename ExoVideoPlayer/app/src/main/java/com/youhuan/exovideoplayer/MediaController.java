@@ -96,7 +96,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         mShrinkImg.setVisibility(pageType.equals(PageType.SHRINK) ? GONE : VISIBLE);
     }
 
-    public void setPlayProgressTxt(int nowSecond, int allSecond) {
+    public void setPlayProgressTxt(long nowSecond, long allSecond) {
         mTimeTxt.setText(getPlayTime(nowSecond, allSecond));
     }
 
@@ -150,7 +150,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         return formatter.format(new Date(time));
     }
 
-    private String getPlayTime(int playSecond, int allSecond) {
+    private String getPlayTime(long playSecond, long allSecond) {
         String playSecondStr = "00:00";
         String allSecondStr = "00:00";
         if (playSecond > 0) {

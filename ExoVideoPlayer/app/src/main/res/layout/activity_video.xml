@@ -13,5 +13,59 @@
             android:id="@+id/video_player"
             android:layout_width="match_parent"
             android:layout_height="match_parent"></com.youhuan.exovideoplayer.VideoPlayer>
+
+
+        <LinearLayout
+            android:id="@+id/layout_video_player_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal|center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/iv_video_play_icon"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:background="@drawable/icon_video_play"
+                android:visibility="visible" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/layout_video_play_not_wifi"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal|center_vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tb_video_play_not_wifi_tips2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:lineSpacingExtra="@dimen/common_5_dp"
+                android:text="@string/video_play_not_wifi_tips2"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/tb_video_play_not_wifi_tips1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@id/tb_video_play_not_wifi_tips2"
+                android:layout_centerInParent="true"
+                android:layout_marginBottom="@dimen/common_5_dp"
+                android:text="@string/video_play_not_wifi_tips1"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/tv_video_play_not_wifi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tb_video_play_not_wifi_tips2"
+                android:layout_centerInParent="true"
+                android:layout_marginTop="10dp"
+                android:text="@string/continue_to_play"
+                android:textColor="@color/orange" />
+        </RelativeLayout>
     </FrameLayout>
 </LinearLayout>

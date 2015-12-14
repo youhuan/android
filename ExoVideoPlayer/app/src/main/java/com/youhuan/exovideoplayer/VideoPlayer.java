@@ -30,7 +30,6 @@ import com.google.android.exoplayer.upstream.DataSource;
 import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultUriDataSource;
-import com.google.android.exoplayer.util.PlayerControl;
 import com.google.android.exoplayer.util.Util;
 
 import java.util.ArrayList;
@@ -72,7 +71,7 @@ public class VideoPlayer extends FrameLayout
     private long mPosition = 0;//记录播放位置
     private Boolean mIsPlayWhenReady = true;//是否在缓冲好时自动播放
     private Boolean mHasRenderToSurface = false;//是否已经渲染到surface
-    private PlayerControl mPlayerControl;
+//    private PlayerControl mPlayerControl;
 
     private Handler mainHandler;
 
@@ -119,7 +118,7 @@ public class VideoPlayer extends FrameLayout
         mSurfaceView.getHolder().addCallback(this);
 
 
-        showProgressView(false);
+        showProgressView(true);
 
         mLayoutProgressbar.setOnClickListener(mOnClickListener);
         mAllVideo = new ArrayList<>();
@@ -130,7 +129,11 @@ public class VideoPlayer extends FrameLayout
 //        if (currentHandler != defaultCookieManager) {
 //            CookieHandler.setDefault(defaultCookieManager);
 //        }
-        preparePlayer();
+
+        // 创建ExoPlayer
+        mExoPlayer = ExoPlayer.Factory.newInstance(2, 1000, 5000);
+        mExoPlayer.addListener(this);
+        mMediaController.setEnabled(true);
     }
 
 
@@ -168,7 +171,7 @@ public class VideoPlayer extends FrameLayout
     private MediaController.MediaControlImpl mMediaControl = new MediaController.MediaControlImpl() {
         @Override
         public void onPlayTurn() {
-            if (mPlayerControl.isPlaying()) {
+            if (mExoPlayer.getPlayWhenReady()) {
                 pausePlay(true);
             } else {
                 goOnPlay();
@@ -190,8 +193,8 @@ public class VideoPlayer extends FrameLayout
             } else if (state.equals(MediaController.ProgressState.STOP)) {
                 resetHideTimer();
             } else {
-                int time = progress * mPlayerControl.getDuration() / 100;
-                mPlayerControl.seekTo(time);
+                long time = progress * mExoPlayer.getDuration() / 100;
+                mExoPlayer.seekTo(time);
                 updatePlayTime();
             }
         }
@@ -210,12 +213,17 @@ public class VideoPlayer extends FrameLayout
         mSurfaceView.setZOrderMediaOverlay(true);
     }
 
+    /**
+     * 设置视频播放器横竖屏播放状态
+     *
+     * @param pageType
+     */
     public void setPageType(MediaController.PageType pageType) {
         mMediaController.setPageType(pageType);
         mCurrPageType = pageType;
     }
 
-    /***
+    /**
      * 强制横屏模式
      */
     @SuppressWarnings("unused")
@@ -223,10 +231,10 @@ public class VideoPlayer extends FrameLayout
         mMediaController.forceLandscapeMode();
     }
 
-    /***
+    /**
      * 播放本地视频 只支持横屏播放
      *
-     * @param Video video
+     * @param video
      */
     @SuppressWarnings("unused")
     public void loadLocalVideo(Video video) {
@@ -277,36 +285,34 @@ public class VideoPlayer extends FrameLayout
      * @param isShowController 是否显示控制条
      */
     public void pausePlay(boolean isShowController) {
-        mPlayerControl.pause();
+        if (null == mExoPlayer) {
+            return;
+        }
+        mExoPlayer.setPlayWhenReady(false);
+        mPosition = mExoPlayer.getCurrentPosition();
         mMediaController.setPlayState(MediaController.PlayState.PAUSE);
         stopHideTimer(isShowController);
     }
 
-    /***
+    /**
      * 继续播放
      */
     public void goOnPlay() {
-        mPlayerControl.seekTo((int) mPosition);
-        mPlayerControl.start();
+        if (null == mExoPlayer) {
+            return;
+        }
+        mExoPlayer.setPlayWhenReady(true);
+        mExoPlayer.seekTo((int) mPosition);
         mMediaController.setPlayState(MediaController.PlayState.PLAY);
         resetHideTimer();
         resetUpdateTimer();
     }
 
     /**
-     * 关闭视频
+     * 获取播放视频列表
+     *
+     * @return
      */
-    public void close() {
-        mMediaController.setPlayState(MediaController.PlayState.PAUSE);
-        stopHideTimer(true);
-        stopUpdateTimer();
-        if (null != mPlayerControl) {
-            mPlayerControl.pause();
-        }
-        mSurfaceView.setVisibility(GONE);
-    }
-
-
     public ArrayList<Video> getAllVideos() {
         return mAllVideo;
     }
@@ -315,27 +321,19 @@ public class VideoPlayer extends FrameLayout
         return mAutoHideController;
     }
 
+    /**
+     * 设置时候自动隐藏视频播放控制栏
+     *
+     * @param autoHideController
+     */
     public void setAutoHideController(boolean autoHideController) {
         mAutoHideController = autoHideController;
     }
 
-
-    /**
-     * 创建ExoPlayer
-     */
-    private void preparePlayer() {
-//        if (mExoPlayer == null) {
-        mExoPlayer = ExoPlayer.Factory.newInstance(2, 1000, 5000);
-        mExoPlayer.addListener(this);
-//            mExoPlayer.seekTo(mPosition);
-        mPlayerControl = new PlayerControl(mExoPlayer);
-//            mMediaController.setMediaPlayer(mPlayerControl);
-        mMediaController.setEnabled(true);
-//        }
-    }
-
     /**
      * 创建videoRender和audioRender
+     *
+     * @param url
      */
     private void buildRenders(String url) {
         String userAgent = Util.getUserAgent(mContext, TAG);
@@ -377,8 +375,20 @@ public class VideoPlayer extends FrameLayout
      * 重新播放
      */
     private void showReplay() {
-        releasePlayer();
         mPosition = 0;
+    }
+
+    /**
+     * 关闭视频
+     */
+    public void close() {
+        mMediaController.setPlayState(MediaController.PlayState.PAUSE);
+        stopHideTimer(true);
+        stopUpdateTimer();
+        if (null != mExoPlayer) {
+            mExoPlayer.setPlayWhenReady(false);
+        }
+        mSurfaceView.setVisibility(GONE);
     }
 
     /**
@@ -390,7 +400,10 @@ public class VideoPlayer extends FrameLayout
             mPosition = mExoPlayer.getCurrentPosition();
             mExoPlayer.release();
             mExoPlayer = null;
-            mPlayerControl = null;
+        }
+        if (mUpdateTimer != null) {
+            mUpdateTimer.cancel();
+            mUpdateTimer = null;
         }
         mVideoRenderer = null;
         mAudioRenderer = null;
@@ -398,32 +411,15 @@ public class VideoPlayer extends FrameLayout
 
 
     /**
-     * 更换清晰度地址时，续播
-     */
-    private void playVideoAtLastPos() {
-        int playTime = mPlayerControl.getCurrentPosition();
-//        mSurfaceView.stopPlayback();
-        loadAndPlay(mNowPlayVideo.getVideoUri(), playTime);
-    }
-
-    public void playLastVideoAtPos(int playTime) {
-        if (null == mNowPlayVideo) {
-            return;
-        }
-//        mSurfaceView.stopPlayback();
-        loadAndPlay(mNowPlayVideo.getVideoUri(), playTime);
-    }
-
-
-    /**
      * 加载并开始播放视频
      *
-     * @param String uri
+     * @param uri
+     * @param seekTime
      */
     private void loadAndPlay(String uri, int seekTime) {
-        showProgressView(seekTime > 0);
+        showProgressView(true);
         if (TextUtils.isEmpty(uri)) {
-            Log.e(TAG, "videoUrl should not be null");
+            Log.e(TAG, "视频uri为空");
             return;
         }
         buildRenders(uri);
@@ -434,16 +430,16 @@ public class VideoPlayer extends FrameLayout
 
     /**
      * 播放视频
-     * should called after setVideoPath()
      */
     private void startPlayVideo(int seekTime) {
         if (null == mUpdateTimer) {
             resetUpdateTimer();
         }
         resetHideTimer();
-        mPlayerControl.start();
+        play(true);
+//        mExoPlayer.setPlayWhenReady(true);
         if (seekTime > 0) {
-            mPlayerControl.seekTo(seekTime);
+            mExoPlayer.seekTo(seekTime);
         }
         mMediaController.setPlayState(MediaController.PlayState.PLAY);
     }
@@ -452,11 +448,11 @@ public class VideoPlayer extends FrameLayout
      * 更新播放的进度时间
      */
     private void updatePlayTime() {
-        if (null == mPlayerControl) {
+        if (null == mExoPlayer) {
             return;
         }
-        int allTime = mPlayerControl.getDuration();
-        int playTime = mPlayerControl.getCurrentPosition();
+        long allTime = mExoPlayer.getDuration();
+        long playTime = mExoPlayer.getCurrentPosition();
         mMediaController.setPlayProgressTxt(playTime, allTime);
     }
 
@@ -464,17 +460,17 @@ public class VideoPlayer extends FrameLayout
      * 更新播放进度条
      */
     private void updatePlayProgress() {
-        if (null == mPlayerControl) {
+        if (null == mExoPlayer) {
             return;
         }
-        int allTime = mPlayerControl.getDuration();
-        int playTime = mPlayerControl.getCurrentPosition();
-        if (allTime < 1 || playTime < 1) {
+        long allTime = mExoPlayer.getDuration();
+        long playTime = mExoPlayer.getCurrentPosition();
+        if (allTime < 1) {
             return;
         }
-        int loadProgress = mPlayerControl.getBufferPercentage();
-        int progress = playTime * 100 / allTime;
-        mMediaController.setProgressBar(progress, loadProgress);
+        int loadProgress = mExoPlayer.getBufferedPercentage();
+        long progress = playTime * 100 / allTime;
+        mMediaController.setProgressBar((int) progress, loadProgress);
     }
 
     /**
@@ -508,8 +504,8 @@ public class VideoPlayer extends FrameLayout
         mMediaController.startAnimation(animation);
     }
 
-    /***
-     *
+    /**
+     * 显示或隐藏视频播放控制栏
      */
     private void showOrHideController() {
         if (mMediaController.getVisibility() == View.VISIBLE) {
@@ -560,7 +556,6 @@ public class VideoPlayer extends FrameLayout
     private void stopUpdateTimer() {
         if (mUpdateTimer != null) {
             mUpdateTimer.cancel();
-            mUpdateTimer = null;
         }
     }
 
@@ -570,12 +565,16 @@ public class VideoPlayer extends FrameLayout
         Log.d(TAG, "onPlayerStateChanged, playWhenReady:" + playWhenReady + ", playbackState:" + playbackState);
         mIsPlayWhenReady = playWhenReady;
         switch (playbackState) {
-            case ExoPlayer.STATE_ENDED:
-                mPlayerControl.seekTo(0);
+            case ExoPlayer.STATE_ENDED://视频播放完
+                mExoPlayer.seekTo(0);
                 showReplay();
+                if (null == mVideoPlayCallback) {
+                    mVideoPlayCallback.onPlayFinish();
+                }
+                stopUpdateTimer();
                 break;
-            case ExoPlayer.STATE_READY:
-                if (mIsPlayWhenReady && mHasRenderToSurface) {
+            case ExoPlayer.STATE_READY://视频准备播放
+                if (mIsPlayWhenReady) {//&& mHasRenderToSurface
                     mLayoutProgressbar.setVisibility(View.GONE);
                 }
                 break;
@@ -661,12 +660,12 @@ public class VideoPlayer extends FrameLayout
     //MediaCodecAudioTrackRenderer.EventListener
     @Override
     public void onAudioTrackInitializationError(AudioTrack.InitializationException e) {
-
+        Log.d(TAG, "onAudioTrackInitializationError");
     }
 
     @Override
     public void onAudioTrackWriteError(AudioTrack.WriteException e) {
-
+        Log.d(TAG, "onAudioTrackWriteError");
     }
 
 
@@ -687,8 +686,6 @@ public class VideoPlayer extends FrameLayout
     }
 
     public interface VideoPlayCallbackImpl {
-        void onCloseVideo();
-
         void onSwitchPageType();
 
         void onPlayFinish();

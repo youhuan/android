@@ -20,4 +20,6 @@
     <color name="video_info_summary_color">#666666</color>
     <color name="video_info_header_color">#858585</color>
     <color name="divider_color">#d6d4d4</color>
+
+    <color name="orange">#f45d49</color>
 </resources>
