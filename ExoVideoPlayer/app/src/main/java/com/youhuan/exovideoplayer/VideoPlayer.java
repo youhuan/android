@@ -30,6 +30,7 @@ import com.google.android.exoplayer.upstream.DataSource;
 import com.google.android.exoplayer.upstream.DefaultAllocator;
 import com.google.android.exoplayer.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer.upstream.DefaultUriDataSource;
+import com.google.android.exoplayer.util.DebugTextViewHelper;
 import com.google.android.exoplayer.util.Util;
 
 import java.util.ArrayList;
@@ -129,11 +130,7 @@ public class VideoPlayer extends FrameLayout
 //        if (currentHandler != defaultCookieManager) {
 //            CookieHandler.setDefault(defaultCookieManager);
 //        }
-
-        // 创建ExoPlayer
-        mExoPlayer = ExoPlayer.Factory.newInstance(2, 1000, 5000);
-        mExoPlayer.addListener(this);
-        mMediaController.setEnabled(true);
+        preparePlayer();
     }
 
 
@@ -361,6 +358,7 @@ public class VideoPlayer extends FrameLayout
      * @param isPlayWhenReady
      */
     private void play(Boolean isPlayWhenReady) {
+        Log.d(TAG, "play");
         Surface surface = mSurfaceView.getHolder().getSurface();
         if (surface == null || !surface.isValid()) {
             Log.e(TAG, "surface not ready");
@@ -390,6 +388,16 @@ public class VideoPlayer extends FrameLayout
         }
         mSurfaceView.setVisibility(GONE);
     }
+
+    public void preparePlayer() {
+        if (mExoPlayer == null) {
+            // 创建ExoPlayer
+            mExoPlayer = ExoPlayer.Factory.newInstance(2, 1000, 5000);
+            mExoPlayer.addListener(this);
+            mMediaController.setEnabled(true);
+        }
+    }
+
 
     /**
      * 释放player
@@ -591,7 +599,7 @@ public class VideoPlayer extends FrameLayout
 
     @Override
     public void onPlayerError(ExoPlaybackException e) {
-        Log.d(TAG, "onPlayerError" + e.getMessage());
+        Log.e(TAG, "onPlayerError", e);
         showReplay();
     }
 
@@ -616,13 +624,13 @@ public class VideoPlayer extends FrameLayout
 
     @Override
     public void onDecoderInitializationError(MediaCodecTrackRenderer.DecoderInitializationException e) {
-        Log.d(TAG, "onDecoderInitializationError " + e.getMessage());
+        Log.e(TAG, "onDecoderInitializationError ", e);
         showReplay();
     }
 
     @Override
     public void onCryptoError(MediaCodec.CryptoException e) {
-        Log.d(TAG, "onCryptoError" + e.getMessage());
+        Log.e(TAG, "onCryptoError", e);
         showReplay();
     }
 
@@ -660,12 +668,12 @@ public class VideoPlayer extends FrameLayout
     //MediaCodecAudioTrackRenderer.EventListener
     @Override
     public void onAudioTrackInitializationError(AudioTrack.InitializationException e) {
-        Log.d(TAG, "onAudioTrackInitializationError");
+        Log.e(TAG, "onAudioTrackInitializationError", e);
     }
 
     @Override
     public void onAudioTrackWriteError(AudioTrack.WriteException e) {
-        Log.d(TAG, "onAudioTrackWriteError");
+        Log.e(TAG, "onAudioTrackWriteError", e);
     }
 
 

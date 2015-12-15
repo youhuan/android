@@ -112,7 +112,7 @@ public class VideoActivity extends Activity {
 
 
         mVideoPlayer.setPageType(MediaController.PageType.SHRINK);
-        mVideoPlayer.setSupportPlayOnSurfaceView();
+//        mVideoPlayer.setSupportPlayOnSurfaceView();
         mVideoPlayer.setVideoPlayCallback(new VideoPlayer.VideoPlayCallbackImpl() {
             @Override
             public void onSwitchPageType() {
@@ -142,10 +142,10 @@ public class VideoActivity extends Activity {
         //WIFI环境下显示播放按钮
         if (isWifi()) {
             mLayoutVideoPlayerIcon.setVisibility(View.VISIBLE);
-            mIvVideoPlayIcon.setVisibility(View.VISIBLE);
+//            mIvVideoPlayIcon.setVisibility(View.VISIBLE);
             mLayoutVideoPlayNotWifi.setVisibility(View.GONE);
         } else {//否则给用户选择提示
-            mIvVideoPlayIcon.setVisibility(View.GONE);
+//            mIvVideoPlayIcon.setVisibility(View.GONE);
             mLayoutVideoPlayerIcon.setVisibility(View.GONE);
             mLayoutVideoPlayNotWifi.setVisibility(View.VISIBLE);
         }
@@ -154,7 +154,7 @@ public class VideoActivity extends Activity {
     private void playVideo() {
         mLayoutVideoPlayerIcon.setVisibility(View.GONE);
         mLayoutVideoPlayNotWifi.setVisibility(View.GONE);
-        mIvVideoPlayIcon.setVisibility(View.GONE);
+//        mIvVideoPlayIcon.setVisibility(View.GONE);
 
         ArrayList<Video> videos = new ArrayList<Video>();
         Video video = new Video();
@@ -219,20 +219,36 @@ public class VideoActivity extends Activity {
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                     WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            mVideoPlayerLayout.removeView(mVideoPlayer);
-            mDecorView.removeView(mVideoPlayer);
-            mDecorView.addView(mVideoPlayer, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-            mVideoPlayer.goOnPlay();
+            mVideoPlayerLayout.getLayoutParams().width = heightPixels;
+            mVideoPlayerLayout.getLayoutParams().height = widthPixels;
         } else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             WindowManager.LayoutParams attrs = getWindow().getAttributes();
             attrs.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN);
             getWindow().setAttributes(attrs);
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-            mDecorView.removeView(mVideoPlayer);
-            mVideoPlayerLayout.removeView(mVideoPlayer);
-            mVideoPlayerLayout.addView(mVideoPlayer, 0);
-            mVideoPlayer.goOnPlay();
+            mVideoPlayerLayout.getLayoutParams().width = widthPixels;
+            mVideoPlayerLayout.getLayoutParams().height = (int) (widthPixels / VIDEO_ASPECT_RATIO);
         }
+//        if (null == mVideoPlayer) {
+//            return;
+//        }
+//        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//            getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+//                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//            mVideoPlayerLayout.removeView(mVideoPlayer);
+//            mDecorView.removeView(mVideoPlayer);
+//            mDecorView.addView(mVideoPlayer, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+//            mVideoPlayer.goOnPlay();
+//        } else if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+//            WindowManager.LayoutParams attrs = getWindow().getAttributes();
+//            attrs.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN);
+//            getWindow().setAttributes(attrs);
+//            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+//            mDecorView.removeView(mVideoPlayer);
+//            mVideoPlayerLayout.removeView(mVideoPlayer);
+//            mVideoPlayerLayout.addView(mVideoPlayer, 0);
+//            mVideoPlayer.goOnPlay();
+//        }
     }
 
     @Override
