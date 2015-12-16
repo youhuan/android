@@ -1,8 +1,10 @@
 package com.youhuan.exovideoplayer;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.MediaCodec;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
@@ -100,11 +102,11 @@ public class VideoPlayer extends FrameLayout
         initView(context);
     }
 
-//    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-//    public VideoPlayer(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-//        super(context, attrs, defStyleAttr, defStyleRes);
-//        initView(context);
-//    }
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public VideoPlayer(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        initView(context);
+    }
 
 
     private void initView(Context context) {
